@@ -3,8 +3,14 @@ import { Button } from "@/components/ui/button";
 import { Table, TableCaption, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
 import Link from "next/link";
 import { CirclePlus } from "lucide-react";
+import { db } from "@/db";
+import { Invoices } from "@/db/schema";
+import { cn } from "@/lib/utils";
 
-export default function Home() {
+export default async function Home() {
+  const results = await db.select().from(Invoices);
+  // console.log(results);
+
   return (
     <main className='flex flex-col justify-center h-full gap-6 text-center max-w-5xl mx-auto my-12'>
       <div className='flex justify-between'>
@@ -30,23 +36,47 @@ export default function Home() {
           </TableRow>
         </TableHeader>
         <TableBody>
-          <TableRow>
-            <TableCell className='font-medium text-left p-4'>
-              <span className='font-semibold'>10/31/2024</span>
-            </TableCell>
-            <TableCell className='text-left p-4'>
-              <span className='font-semibold'>John Doe</span>
-            </TableCell>
-            <TableCell className='text-left p-4'>
-              <span className=''>john@email.com</span>
-            </TableCell>
-            <TableCell className='text-left p-4'>
-              <Badge className='rounded-full'>Open</Badge>
-            </TableCell>
-            <TableCell className='text-right p-4'>
-              <span className='font-semibold'>$250.00</span>
-            </TableCell>
-          </TableRow>
+          {results.map((result) => {
+            return (
+              <TableRow key={result.id}>
+                <TableCell className='font-medium text-left p-0'>
+                  <Link href={`/invoices/${result.id}`} className='font-semibold p-4 block'>
+                    {new Date(result.createTs).toLocaleDateString()}
+                  </Link>
+                </TableCell>
+                <TableCell className='text-left p-0'>
+                  <Link href={`/invoices/${result.id}`} className='font-semibold p-4 block'>
+                    John Doe
+                  </Link>
+                </TableCell>
+                <TableCell className='text-left p-0'>
+                  <Link href={`/invoices/${result.id}`} className='p-4 block'>
+                    john@email.com
+                  </Link>
+                </TableCell>
+                <TableCell className='text-left p-0'>
+                  <Link href={`/invoices/${result.id}`} className='p-4 block'>
+                    <Badge
+                      className={cn(
+                        "rounded-full capitalize",
+                        result.status === "open" && "bg-blue-500",
+                        result.status === "paid" && "bg-green-600",
+                        result.status === "void" && "bg-zinc-700",
+                        result.status === "uncollectible" && "bg-red-600"
+                      )}
+                    >
+                      {result.status}
+                    </Badge>
+                  </Link>
+                </TableCell>
+                <TableCell className='text-right p-0'>
+                  <Link href={`/invoices/${result.id}`} className='font-semibold p-4 block'>
+                    ${(result.value / 100).toFixed(2)}
+                  </Link>
+                </TableCell>
+              </TableRow>
+            );
+          })}
         </TableBody>
       </Table>
     </main>
