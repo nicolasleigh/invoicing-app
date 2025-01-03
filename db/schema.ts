@@ -8,4 +8,5 @@ export const Invoices = pgTable("invoice", {
   value: integer("value").notNull(),
   description: text("description").notNull(),
   status: statusEnum("status").notNull(),
+  userId: text("userId").notNull(),
 });
