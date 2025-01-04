@@ -4,7 +4,7 @@ import { Table, TableCaption, TableHeader, TableRow, TableHead, TableBody, Table
 import Link from "next/link";
 import { CirclePlus } from "lucide-react";
 import { db } from "@/db";
-import { Invoices } from "@/db/schema";
+import { Customers, Invoices } from "@/db/schema";
 import { cn } from "@/lib/utils";
 import Container from "@/components/Container";
 import { auth } from "@clerk/nextjs/server";
@@ -13,8 +13,18 @@ import { eq } from "drizzle-orm";
 export default async function DashboardPage() {
   const { userId } = await auth();
   if (!userId) return;
-  const results = await db.select().from(Invoices).where(eq(Invoices.userId, userId));
-  // console.log(results);
+  const results = await db
+    .select()
+    .from(Invoices)
+    .innerJoin(Customers, eq(Invoices.customerId, Customers.id))
+    .where(eq(Invoices.userId, userId));
+
+  const invoices = results.map(({ invoice, customers }) => {
+    return {
+      ...invoice,
+      customer: customers,
+    };
+  });
 
   return (
     <main className='h-full'>
@@ -42,7 +52,7 @@ export default async function DashboardPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {results.map((result) => {
+            {invoices.map((result) => {
               return (
                 <TableRow key={result.id}>
                   <TableCell className='font-medium text-left p-0'>
@@ -52,12 +62,12 @@ export default async function DashboardPage() {
                   </TableCell>
                   <TableCell className='text-left p-0'>
                     <Link href={`/invoices/${result.id}`} className='font-semibold p-4 block'>
-                      John Doe
+                      {result.customer.name}
                     </Link>
                   </TableCell>
                   <TableCell className='text-left p-0'>
                     <Link href={`/invoices/${result.id}`} className='p-4 block'>
-                      john@email.com
+                      {result.customer.email}
                     </Link>
                   </TableCell>
                   <TableCell className='text-left p-0'>
