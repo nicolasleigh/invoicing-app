@@ -5,7 +5,11 @@ import { Customers, Invoices, Status } from "@/db/schema";
 import { auth } from "@clerk/nextjs/server";
 import { eq, and, isNull } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+import Stripe from "stripe";
+
+const stripe = new Stripe(process.env.STRIPE_API_SECRET_KEY!);
 
 export async function createAction(formData: FormData) {
   const { userId, orgId } = await auth();
@@ -47,7 +51,7 @@ export async function createAction(formData: FormData) {
   redirect(`/invoices/${results[0].id}`);
 }
 
-export async function updateStatusAction(formData: FormData) {
+export async function updateStatusAction(formData: FormData, revalidate = true) {
   const { userId, orgId } = await auth();
 
   if (!userId) return;
@@ -67,7 +71,9 @@ export async function updateStatusAction(formData: FormData) {
       .where(and(eq(Invoices.id, parseInt(id)), eq(Invoices.userId, userId), isNull(Invoices.organizationId)));
   }
 
-  revalidatePath(`/invoices/${id}`, "page");
+  if (revalidate) {
+    revalidatePath(`/invoices/${id}`, "page");
+  }
 }
 
 export async function deleteInvoiceAction(formData: FormData) {
@@ -85,4 +91,41 @@ export async function deleteInvoiceAction(formData: FormData) {
   }
 
   redirect("/dashboard");
+}
+
+export async function createPayment(formDate: FormData) {
+  const headersList = await headers();
+  const origin = headersList.get("origin");
+  const id = parseInt(formDate.get("id") as string);
+
+  const [result] = await db
+    .select({
+      status: Invoices.status,
+      value: Invoices.value,
+    })
+    .from(Invoices)
+    .where(eq(Invoices.id, id))
+    .limit(1);
+
+  // https://docs.stripe.com/checkout/quickstart?client=next
+  const session = await stripe.checkout.sessions.create({
+    line_items: [
+      {
+        // Provide the exact Price ID (for example, pr_1234) of the product you want to sell
+        price_data: {
+          currency: "usd",
+          product: "prod_RWydVHVugFADXb",
+          unit_amount: result.value,
+        },
+        quantity: 1,
+      },
+    ],
+    mode: "payment",
+    // https://docs.stripe.com/payments/checkout/custom-success-page
+    success_url: `${origin}/invoices/${id}/payment/?status=success&session_id={CHECKOUT_SESSION_ID}`,
+    cancel_url: `${origin}/invoices/${id}/payment/?status=canceled&session_id={CHECKOUT_SESSION_ID}`,
+  });
+
+  if (!session.url) throw new Error("Invalid session");
+  redirect(session.url);
 }

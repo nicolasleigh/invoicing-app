@@ -23,7 +23,8 @@ import {
 import { AVAILABLE_STATUS } from "@/data/invoices";
 import { Customers, Invoices } from "@/db/schema";
 import { cn } from "@/lib/utils";
-import { ChevronDown, Ellipsis, Trash2 } from "lucide-react";
+import { ChevronDown, CreditCard, Ellipsis, Trash2 } from "lucide-react";
+import Link from "next/link";
 import { useOptimistic } from "react";
 
 interface InvoiceProps {
@@ -106,6 +107,15 @@ export default function Invoice({ invoice }: InvoiceProps) {
                         Delete Invoice
                       </button>
                     </AlertDialogTrigger>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link
+                      href={`/invoices/${invoice.id}/payment`}
+                      className='w-full px-2 py-1.5 flex gap-2 items-center'
+                    >
+                      <CreditCard className='w-4' />
+                      Payment
+                    </Link>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
