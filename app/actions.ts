@@ -8,8 +8,11 @@ import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import Stripe from "stripe";
+import { Resend } from "resend";
+import InvoiceCreatedEmail from "@/emails/invoice-created";
 
 const stripe = new Stripe(process.env.STRIPE_API_SECRET_KEY!);
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function createAction(formData: FormData) {
   const { userId, orgId } = await auth();
@@ -47,6 +50,20 @@ export async function createAction(formData: FormData) {
     .returning({
       id: Invoices.id,
     });
+
+  try {
+    const { data, error } = await resend.emails.send({
+      from: "Invoice <info@linze.pro>",
+      to: [email],
+      subject: "You have a new invoice",
+      react: InvoiceCreatedEmail({ invoiceId: results[0].id }),
+    });
+    console.log("data", data);
+    console.log("error", error);
+  } catch (error) {
+    console.log(error);
+    return Response.json({ error }, { status: 500 });
+  }
 
   redirect(`/invoices/${results[0].id}`);
 }
