@@ -62,7 +62,7 @@ export async function createAction(formData: FormData) {
     console.log("error", error);
   } catch (error) {
     console.log(error);
-    return Response.json({ error }, { status: 500 });
+    return;
   }
 
   redirect(`/invoices/${results[0].id}`);

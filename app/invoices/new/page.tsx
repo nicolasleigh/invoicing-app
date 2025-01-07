@@ -1,20 +1,12 @@
 "use client";
 
-import { sql } from "drizzle-orm";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Table, TableCaption, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
-import Link from "next/link";
-import { CirclePlus } from "lucide-react";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { db } from "@/db";
 import { createAction } from "@/app/actions";
-import { SyntheticEvent, useState } from "react";
-import SubmitButton from "@/components/SubmitButton";
-import Form from "next/form";
 import Container from "@/components/Container";
+import SubmitButton from "@/components/SubmitButton";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import Form from "next/form";
 
 export default function Page() {
   // const [state, setState] = useState("ready");

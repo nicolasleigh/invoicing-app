@@ -1,7 +1,8 @@
 import { cn } from "@/lib/utils";
 import { ComponentProps } from "react";
 
-interface ContainerProps extends ComponentProps<"div"> {}
+// https://www.totaltypescript.com/react-component-props-type-helper
+type ContainerProps = ComponentProps<"div">;
 
 export default function Container({ children, className, ...props }: ContainerProps) {
   return (
